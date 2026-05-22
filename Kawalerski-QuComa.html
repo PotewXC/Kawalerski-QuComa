@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>OPERACJA KAWALERSKI 🔒</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --panel: #12121a;
+  --border: #1e1e2e;
+  --gold: #f5c842;
+  --gold2: #e0a020;
+  --red: #ff3b3b;
+  --green: #39ff85;
+  --blue: #3b82f6;
+  --text: #e8e8f0;
+  --muted: #555570;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Space Mono', monospace;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ══ MAPA — zawsze na górze ══ */
+#map-wrap {
+  position: relative;
+  width: 100%;
+  height: 58dvh;
+  flex-shrink: 0;
+  border-bottom: 2px solid var(--gold);
+}
+#map { width:100%; height:100%; background:#0d1117; }
+#fog-canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 500;
+}
+#fog-label {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(10,10,15,0.85);
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  z-index: 600;
+  pointer-events: none;
+}
+#gps-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 600;
+  background: rgba(10,10,15,0.9);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 18px;
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+#gps-btn.active { border-color: var(--green); }
+
+/* ══ DOLNA CZĘŚĆ ══ */
+#bottom {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.screen { display:none; flex-direction:column; align-items:center; padding:18px 16px 28px; gap:14px; min-height:100%; }
+.screen.active { display:flex; }
+
+/* INTRO */
+#screen-intro { justify-content:center; text-align:center; gap:18px; background:radial-gradient(ellipse at 50% 30%,#1a1228 0%,var(--bg) 80%); }
+.lock-icon { font-size:52px; animation:pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+.title-main { font-family:'Bebas Neue',sans-serif; font-size:clamp(36px,10vw,58px); letter-spacing:5px; color:var(--gold); text-shadow:0 0 30px rgba(245,200,66,0.5); line-height:1; }
+.title-sub { font-size:10px; letter-spacing:4px; color:var(--muted); }
+.intro-desc { font-size:12px; line-height:1.8; color:#aaa; max-width:340px; border:1px solid var(--border); border-left:3px solid var(--gold); padding:14px 16px; text-align:left; }
+.intro-desc span { color:var(--gold); font-weight:700; }
+
+/* BUTTONS */
+.btn { font-family:'Space Mono',monospace; font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase; padding:14px 28px; border:none; border-radius:4px; cursor:pointer; transition:all .18s; width:100%; max-width:380px; }
+.btn:active { opacity:.85; transform:scale(.98); }
+.btn-gold { background:var(--gold); color:#0a0a0f; }
+.btn-outline { background:transparent; color:var(--gold); border:2px solid var(--gold); }
+.btn-green { background:var(--green); color:#0a0a0f; }
+
+/* PROGRESS */
+.progress-wrap { width:100%; max-width:420px; }
+.progress-label { display:flex; justify-content:space-between; font-size:9px; letter-spacing:2px; color:var(--muted); margin-bottom:6px; }
+.progress-label span:last-child { color:var(--gold); }
+.progress-bar { height:5px; background:var(--border); border-radius:3px; overflow:hidden; }
+.progress-fill { height:100%; background:linear-gradient(90deg,var(--gold2),var(--gold)); border-radius:3px; transition:width .7s cubic-bezier(.4,0,.2,1); }
+
+/* QUESTION */
+.q-header { width:100%; max-width:420px; display:flex; align-items:center; justify-content:space-between; }
+.q-badge { font-family:'Bebas Neue',sans-serif; font-size:22px; color:var(--gold); letter-spacing:2px; }
+.lives { font-size:17px; }
+.hint-bar { width:100%; max-width:420px; background:var(--panel); border:1px solid var(--border); border-left:3px solid var(--blue); border-radius:6px; padding:11px 14px; font-size:11px; line-height:1.6; color:var(--muted); }
+.hint-bar span { color:var(--text); font-weight:700; }
+.q-card { width:100%; max-width:420px; background:var(--panel); border:1px solid var(--border); border-top:3px solid var(--gold); border-radius:8px; padding:16px; }
+.q-category { font-size:9px; letter-spacing:3px; color:var(--gold); margin-bottom:10px; }
+.q-text { font-size:14px; line-height:1.65; }
+.answers { width:100%; max-width:420px; display:flex; flex-direction:column; gap:8px; }
+.answer-btn { width:100%; background:var(--panel); border:1px solid var(--border); color:var(--text); font-family:'Space Mono',monospace; font-size:12px; padding:12px 14px; text-align:left; border-radius:6px; cursor:pointer; transition:all .15s; }
+.answer-btn:active { transform:translateX(3px); }
+.answer-btn.correct { background:rgba(57,255,133,0.12); border-color:var(--green); color:var(--green); }
+.answer-btn.wrong   { background:rgba(255,59,59,0.12);  border-color:var(--red);   color:var(--red); }
+.answer-btn:disabled { pointer-events:none; }
+
+/* MINIGAME */
+#screen-minigame { justify-content:center; gap:14px; }
+.mg-title { font-family:'Bebas Neue',sans-serif; font-size:30px; letter-spacing:4px; color:var(--red); text-align:center; }
+.mg-sub { font-size:10px; letter-spacing:2px; color:var(--muted); text-align:center; }
+#mg-memory { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; width:100%; max-width:320px; }
+.mem-card { aspect-ratio:1; background:var(--panel); border:2px solid var(--border); border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:22px; transition:all .2s; }
+.mem-card.flipped { border-color:var(--gold); }
+.mem-card.matched { border-color:var(--green); background:rgba(57,255,133,0.1); cursor:default; }
+#mg-reaction-area { width:170px; height:170px; border-radius:50%; border:3px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:52px; transition:background .2s; user-select:none; }
+#mg-reaction-area:active { transform:scale(.93); }
+.mg-msg { font-size:12px; color:var(--muted); text-align:center; line-height:1.7; max-width:290px; }
+
+/* SUCCESS */
+#screen-success { justify-content:center; text-align:center; gap:16px; }
+.success-icon { font-size:60px; animation:bounce .7s ease infinite alternate; }
+@keyframes bounce { to { transform:translateY(-10px); } }
+.success-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(32px,9vw,52px); letter-spacing:4px; color:var(--green); text-shadow:0 0 30px rgba(57,255,133,0.4); }
+.success-msg { font-size:12px; color:#aaa; line-height:1.8; max-width:290px; }
+
+/* TOAST */
+#toast { position:fixed; bottom:16px; left:50%; transform:translateX(-50%) translateY(80px); background:#1e1e2e; border:1px solid var(--gold); color:var(--gold); font-size:11px; padding:9px 18px; border-radius:40px; letter-spacing:1px; transition:transform .3s cubic-bezier(.4,0,.2,1); z-index:9999; white-space:nowrap; pointer-events:none; }
+#toast.show { transform:translateX(-50%) translateY(0); }
+.cp { position:fixed; width:9px; height:9px; top:-10px; border-radius:2px; animation:fall linear forwards; z-index:9998; pointer-events:none; }
+@keyframes fall { to { transform:translateY(110dvh) rotate(720deg); opacity:0; } }
+.fi { animation:fadeIn .35s ease forwards; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+</style>
+</head>
+<body>
+
+<!-- ══ MAPA ZAWSZE WIDOCZNA ══ -->
+<div id="map-wrap">
+  <div id="map"></div>
+  <canvas id="fog-canvas"></canvas>
+  <div id="fog-label">🌫️ MAPA ZAKRYTA</div>
+  <button id="gps-btn" onclick="toggleGPS()">📍</button>
+</div>
+
+<!-- ══ DOLNA CZĘŚĆ ══ -->
+<div id="bottom">
+
+  <div class="screen active" id="screen-intro">
+    <div class="lock-icon">🔒</div>
+    <div>
+      <div class="title-main">OPERACJA</div>
+      <div class="title-main" style="color:#fff">KAWALER</div>
+      <div class="title-sub">// misja tajna — tylko dla odważnych //</div>
+    </div>
+    <div class="intro-desc">
+      Hej <span>Panie Młody</span> — nie wiesz dokąd jedziesz.<br><br>
+      Odpowiadaj poprawnie na pytania o <span>Wiktorię</span>, a mgła na mapie będzie się unosić odkrywając trasę.<br><br>
+      Zła odpowiedź = <span>minigraka</span>. Powodzenia 💀
+    </div>
+    <button class="btn btn-gold" onclick="startGame()">ZACZYNAM MISJĘ →</button>
+  </div>
+
+  <div class="screen" id="screen-question">
+    <div class="q-header">
+      <div class="q-badge">PYT. <span id="q-num">1</span>/29</div>
+      <div class="lives" id="lives-disp">❤️❤️❤️</div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label"><span>MGŁA USUNIĘTA</span><span id="prog-pct">0%</span></div>
+      <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    </div>
+    <div class="hint-bar">
+      🧭 Powiedz kierowcy: <span id="driver-hint">"Czekaj na instrukcje..."</span>
+    </div>
+    <div class="q-card fi">
+      <div class="q-category" id="q-cat">KATEGORIA</div>
+      <div class="q-text" id="q-text">Treść pytania...</div>
+    </div>
+    <div class="answers" id="answers"></div>
+  </div>
+
+  <div class="screen" id="screen-minigame">
+    <div class="mg-title" id="mg-title">⚠️ KARA!</div>
+    <div class="mg-sub" id="mg-sub">// zła odpowiedź — przejdź wyzwanie //</div>
+    <div id="mg-content"></div>
+    <div class="mg-msg" id="mg-msg"></div>
+  </div>
+
+  <div class="screen" id="screen-success">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">DOTARŁEŚ!</div>
+    <div class="success-msg">
+      Znasz Wiktorię jak nikt inny.<br>
+      <strong style="color:var(--green)">Czas świętować! 🍻</strong>
+    </div>
+    <div style="width:100%;max-width:380px;background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--green);border-radius:8px;padding:16px 18px;">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--green);margin-bottom:10px;">📍 CEL MISJI — ADRES</div>
+      <div style="font-size:20px;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;color:var(--text);margin-bottom:6px;">Nielisz 72</div>
+      <div style="font-size:14px;color:var(--muted);margin-bottom:14px;">22-413 Nielisz</div>
+      <a href="https://maps.google.com/?q=Nielisz+72,22-413+Nielisz" target="_blank"
+         style="display:block;background:var(--green);color:#0a0a0f;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:12px;border-radius:4px;text-decoration:none;text-align:center;">
+        OTWÓRZ W MAPACH →
+      </a>
+    </div>
+    <button class="btn btn-outline" onclick="restartGame()">ZAGRAJ JESZCZE RAZ</button>
+  </div>
+
+</div>
+<div id="toast"></div>
+
+<script>
+// ════════ TRASA ════════
+// Felicity Lublin → Jezioro Nielisz przez Świdnik
+const ROUTE = [
+  { lat: 51.2319, lng: 22.6138 },  // Felicity Lublin (START)
+  { lat: 51.2200, lng: 22.6800 },  // Świdnik centrum
+  { lat: 51.1750, lng: 22.8100 },  // Piaski
+  { lat: 51.1050, lng: 22.9350 },  // Trawniki
+  { lat: 51.0100, lng: 23.0050 },  // Żółkiewka okolice
+  { lat: 50.9400, lng: 23.0550 },  // Krasnystaw S
+  { lat: 50.8700, lng: 23.0350 },  // Izbica okolice
+  { lat: 50.8200, lng: 23.0250 },  // Szczebrzeszyn N
+  { lat: 50.8002, lng: 23.0442 },  // Jezioro Nielisz (CEL)
+];
+
+const DRIVER_HINTS = [
+  "\"Jedź na wschód, kierunek Świdnik!\"",
+  "\"Przez Świdnik, dalej na południe!\"",
+  "\"Jedź przez Piaski — droga 17!\"",
+  "\"Kieruj się na Krasnystaw!\"",
+  "\"Na południe — dobra robota!\"",
+  "\"Minął półmetek, dalej na południe!\"",
+  "\"Przez Izbicę, już bliżej!\"",
+  "\"Kieruj się na Szczebrzeszyn!\"",
+  "\"OSTATNIE KILOMETRY — już blisko! 🎯\"",
+];
+
+// ════════ PYTANIA ════════
+const QUESTIONS = [
+  { category:"👰 POZNAJ SWOJĄ ŻONĘ", question:"Jaki napój Wiktoria pije najchętniej na co dzień?", answers:["Kawa","Herbata","Woda","Sok pomarańczowy"], correct:2, hint:"Najzdrowszy wybór 💧" },
+  { category:"👰 POZNAJ SWOJĄ ŻONĘ", question:"Która pora roku jest ulubioną porą Wiktorii?", answers:["Wiosna","Jesień","Zima","Lato"], correct:3, hint:"Ciepło, plaża, słońce ☀️" },
+  { category:"👰 POZNAJ SWOJĄ ŻONĘ", question:"Gdyby Wiktoria mogła jeść tylko jedno danie do końca życia — co by wybrała?", answers:["Pizza Margherita","Sushi","Carbonara","Pierogi ruskie"], correct:2, hint:"Włoska klasyka z boczkiem 🍝" },
+  { category:"👰 POZNAJ SWOJĄ ŻONĘ", question:"Co Wiktoria robi gdy jest zdenerwowana lub zestresowana?", answers:["Idzie na spacer","Je czekoladę","Przegryza usta","Dzwoni do mamy"], correct:2, hint:"Coś z twarzą... 😬" },
+  { category:"👰 POZNAJ SWOJĄ ŻONĘ", question:"Jaki gatunek muzyki słucha Wiktoria najczęściej?", answers:["Pop","R&B","Rock","Muzyka filmowa"], correct:0, hint:"Mainstream i beztrosko 🎵" },
+  { category:"👰 POZNAJ SWOJĄ ŻONĘ", question:"Ile czasu zajmuje Wiktorii poranna rutyna w łazience?", answers:["Ponad godzina","20–30 minut","5–10 minut","Godzina"], correct:2, hint:"Szybko i sprawnie ⚡" },
+  { category:"👰 POZNAJ SWOJĄ ŻONĘ", question:"Co Wiktoria najchętniej zamawia w restauracji?", answers:["Sałatkę z kurczakiem","Stek","Makaron","Burgera"], correct:2, hint:"Znowu Włochy... 🍝" },
+  { category:"👰 POZNAJ SWOJĄ ŻONĘ", question:"Która pora dnia jest ulubioną porą Wiktorii?", answers:["Ranek","Południe","Wieczór","Noc"], correct:2, hint:"Relaks po całym dniu 🌙" },
+  { category:"👰 POZNAJ SWOJĄ ŻONĘ", question:"Jakie zwierzę Wiktoria wzięłaby do domu gdyby mogła?", answers:["Kota","Królika","Papugę","Psa"], correct:3, hint:"Wierny i lojalny 🐶" },
+  { category:"👰 POZNAJ SWOJĄ ŻONĘ", question:"Co Wiktoria robi w wolny weekend?", answers:["Ćwiczy na siłowni","Gotuje nowe przepisy","Ogląda seriale lub wychodzi ze znajomymi","Czyta książki"], correct:2, hint:"Netflix lub towarzystwo 📺" },
+  { category:"❤️ WASZA HISTORIA", question:"Gdzie po raz pierwszy poznałeś Wiktorię?", answers:["Na studiach","W gimnazjum","Na imprezie","Przez internet"], correct:1, hint:"Młodzi i niewinni 🎒" },
+  { category:"❤️ WASZA HISTORIA", question:"Ile czasu minęło od poznania się do pierwszej 'randki'?", answers:["Kilka tygodni","Pół roku","Rok","Kilka miesięcy"], correct:1, hint:"Cierpliwość popłaca 😏" },
+  { category:"❤️ WASZA HISTORIA", question:"Jak ma na imię najlepsza przyjaciółka Wiktorii?", answers:["Kasia","Ania","Magda","Wiktoria"], correct:3, hint:"To samo imię! 😂" },
+  { category:"❤️ WASZA HISTORIA", question:"Gdzie byliście na pierwszych wspólnych wakacjach?", answers:["Chorwacja","Grecja","Wenecja","Paryż"], correct:2, hint:"Gondole i kanały 🛶" },
+  { category:"❤️ WASZA HISTORIA", question:"Co robiliście na pierwszą rocznicę związku?", answers:["Kolacja w restauracji","Byliście u Q — skończyło się wypadkiem samochodowym","Wyjazd nad morze","Impreza z przyjaciółmi"], correct:1, hint:"Niezapomniana rocznica z przygodą 🚗💥" },
+  { category:"❤️ WASZA HISTORIA", question:"Ile lat byliście razem przed zaręczynami?", answers:["2 lata","3 lata","4,5 roku","6 lat"], correct:2, hint:"Solidna podstawa 💪" },
+  { category:"❤️ WASZA HISTORIA", question:"Gdzie odbyły się zaręczyny?", answers:["W restauracji w Lublinie","W Rzymie przy fontannie","Na plaży w Katanii na Sycylii","W domu przy rodzinie"], correct:2, hint:"Słońce, morze, Sycylia 🌊" },
+  { category:"❤️ WASZA HISTORIA", question:"Jak opisałbyś reakcję Wiktorii gdy się oświadczyłeś?", answers:["Płakała ze szczęścia","Był cringe — przez gapiów na imprezie przy plaży","Była w totalnym szoku","Wiedziała wcześniej"], correct:1, hint:"Publiczność nie pomagała... 😅" },
+  { category:"❤️ WASZA HISTORIA", question:"Jak nazywa się 'wasza' piosenka?", answers:["Perfect – Ed Sheeran","Glimpse of Us – Joji","Lover – Taylor Swift","All of Me – John Legend"], correct:1, hint:"Joji, melancholijnie i pięknie 🎶" },
+  { category:"❤️ WASZA HISTORIA", question:"Od kiedy trwają przygotowania do ślubu?", answers:["Od stycznia 2025","Od maja 2025","Od października 2025","Od początku 2026"], correct:2, hint:"Jesień 2025 — wielki projekt 📋" },
+  { category:"💍 MAŁŻEŃSKA TRIVIA", question:"Co jest dla Wiktorii najważniejsze w związku?", answers:["Czułość","Szczerość","Poczucie humoru","Stabilność finansowa"], correct:1, hint:"Bez kłamstw, zawsze 🤝" },
+  { category:"💍 MAŁŻEŃSKA TRIVIA", question:"Jakim jednym słowem Wiktoria opisałaby Ciebie?", answers:["Zabawny","Szalony","Rozsądny","Opiekuńczy"], correct:2, hint:"Głowa na karku 🧠" },
+  { category:"💍 MAŁŻEŃSKA TRIVIA", question:"Co najbardziej denerwuje Wiktorię u Ciebie?", answers:["Bałagan w domu","Ciągłe wiercenie się","Spóźnianie się","Telefon przy kolacji"], correct:1, hint:"Nie możesz usiedzieć spokojnie? 😤" },
+  { category:"💍 MAŁŻEŃSKA TRIVIA", question:"Ile dzieci planujecie mieć?", answers:["Jedno","Dwoje","Troje","Zobaczymy"], correct:2, hint:"Pełna drużyna! 👶👶👶" },
+  { category:"💍 MAŁŻEŃSKA TRIVIA", question:"Co Wiktoria chciałaby zmienić w Tobie po ślubie?", answers:["Nawyki żywieniowe","Sposób ubierania","Romantyczność","Nic — jesteś idealny"], correct:2, hint:"Więcej kwiatków i niespodzianek 🌹" },
+  { category:"💍 MAŁŻEŃSKA TRIVIA", question:"Gdzie docelowo chcecie razem zamieszkać?", answers:["Centrum miasta","Blok na obrzeżach","W domku z ogrodem","Za granicą"], correct:2, hint:"Spokój, ogródek, grill 🏡" },
+  { category:"💍 MAŁŻEŃSKA TRIVIA", question:"Jak Wiktoria najszybciej odpręża się po ciężkim dniu?", answers:["Długa kąpiel","Seria na Netflixie","Rozmowa z Tobą","Szybkie zaśnięcie"], correct:3, hint:"Ekspresowo w objęcia Morfeusza 😴" },
+  { category:"💍 MAŁŻEŃSKA TRIVIA", question:"Jakie jest największe zawodowe marzenie Wiktorii?", answers:["Własna firma","Praca za granicą","Znaleźć pracę która ma to 'coś'","Szybki awans korporacyjny"], correct:2, hint:"Pasja ważniejsza niż kasa 💫" },
+  { category:"💍 MAŁŻEŃSKA TRIVIA", question:"Który film oglądaliście razem najwięcej razy?", answers:["Titanic","Mamma Mia","Nie mamy takiego — zawsze coś nowego","La La Land"], correct:2, hint:"Zawsze nowości na ekranie 🎬" },
+];
+
+const TOTAL = QUESTIONS.length; // 29
+
+// ════════ MAPA ════════
+let map, fogCanvas, fogCtx;
+let routeLine = null, routeMarkers = [];
+let gpsMarker = null, gpsCircle = null;
+let gpsActive = false, gpsWatcher = null;
+let revealedCount = 0;
+
+function initMap() {
+  map = L.map('map', { zoomControl:false, attributionControl:false, dragging:true, scrollWheelZoom:false, doubleClickZoom:false });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:18 }).addTo(map);
+  L.control.zoom({ position:'topleft' }).addTo(map);
+
+  fogCanvas = document.getElementById('fog-canvas');
+  fogCtx = fogCanvas.getContext('2d');
+
+  // Pokaż całą trasę w widoku
+  const bounds = L.latLngBounds(ROUTE.map(p => [p.lat, p.lng]));
+  map.fitBounds(bounds, { padding:[24,24] });
+
+  // Ogranicz panoramę do punktu startowego na początku
+  const startBounds = L.latLngBounds([[ROUTE[0].lat-0.08, ROUTE[0].lng-0.12],[ROUTE[0].lat+0.08, ROUTE[0].lng+0.12]]);
+  map.setMaxBounds(startBounds);
+
+  resizeFog();
+  window.addEventListener('resize', resizeFog);
+  map.on('moveend zoomend', redrawFog);
+
+  drawFog(0);
+}
+
+function resizeFog() {
+  const wrap = document.getElementById('map-wrap');
+  fogCanvas.width  = wrap.offsetWidth;
+  fogCanvas.height = wrap.offsetHeight;
+  redrawFog();
+}
+
+function redrawFog() { drawFog(revealedCount); }
+
+// Noise seed dla efektu mgły
+let noiseOff = 0;
+function drawFog(revealed) {
+  if (!fogCtx || !map) return;
+  const W = fogCanvas.width, H = fogCanvas.height;
+  fogCtx.clearRect(0, 0, W, H);
+
+  const revPts = Math.round((revealed / TOTAL) * (ROUTE.length - 1));
+
+  // ── 1. Solidna czarna mgła (w pełni nieprzeźroczysta) ──
+  fogCtx.fillStyle = 'rgb(8, 8, 16)';
+  fogCtx.fillRect(0, 0, W, H);
+
+  // ── 2. Wycięcie odkrytego obszaru (destination-out) ──
+  fogCtx.save();
+  fogCtx.globalCompositeOperation = 'destination-out';
+
+  // Punkt startowy zawsze widoczny
+  const startCp = map.latLngToContainerPoint([ROUTE[0].lat, ROUTE[0].lng]);
+  cutCircle(startCp.x, startCp.y, 70);
+
+  for (let i = 1; i <= revPts; i++) {
+    const cp = map.latLngToContainerPoint([ROUTE[i].lat, ROUTE[i].lng]);
+    cutCircle(cp.x, cp.y, 65);
+
+    // Korytarz między punktami
+    const prev = map.latLngToContainerPoint([ROUTE[i-1].lat, ROUTE[i-1].lng]);
+    const steps = 18;
+    for (let s = 1; s < steps; s++) {
+      const t = s / steps;
+      cutCircle(prev.x+(cp.x-prev.x)*t, prev.y+(cp.y-prev.y)*t, 48);
+    }
+  }
+  fogCtx.restore();
+
+  // ── 3. Nakładamy mgłę z powrotem na krawędziach odkrytego obszaru ──
+  // (miękkie przejście ale NIEPRZEŹROCZYSTY środek mgły)
+  fogCtx.save();
+  fogCtx.globalCompositeOperation = 'source-over';
+
+  // Budujemy odwróconą maskę: ciemność tam gdzie mgła
+  const offscreen = document.createElement('canvas');
+  offscreen.width = W; offscreen.height = H;
+  const oc = offscreen.getContext('2d');
+
+  // Wypełnij ciemnością
+  oc.fillStyle = 'rgba(8,8,16,1)';
+  oc.fillRect(0,0,W,H);
+
+  // Wytnij odkryty obszar (ostrzej)
+  oc.globalCompositeOperation = 'destination-out';
+  const startCp2 = map.latLngToContainerPoint([ROUTE[0].lat, ROUTE[0].lng]);
+  cutCircleOn(oc, startCp2.x, startCp2.y, 72, 0.3);
+
+  for (let i = 1; i <= revPts; i++) {
+    const cp = map.latLngToContainerPoint([ROUTE[i].lat, ROUTE[i].lng]);
+    cutCircleOn(oc, cp.x, cp.y, 66, 0.3);
+    const prev = map.latLngToContainerPoint([ROUTE[i-1].lat, ROUTE[i-1].lng]);
+    const steps = 18;
+    for (let s = 1; s < steps; s++) {
+      const t = s / steps;
+      cutCircleOn(oc, prev.x+(cp.x-prev.x)*t, prev.y+(cp.y-prev.y)*t, 50, 0.35);
+    }
+  }
+
+  // ── 4. Efekt mgły / chmur na surface offscreen ──
+  oc.globalCompositeOperation = 'source-over';
+  addFogTexture(oc, W, H);
+
+  fogCtx.drawImage(offscreen, 0, 0);
+  fogCtx.restore();
+
+  // ── 5. Label odkrycia ──
+  const pct = Math.round((revealed / TOTAL) * 100);
+  document.getElementById('fog-label').textContent =
+    pct === 0   ? '🌫️ MAPA ZAKRYTA' :
+    pct === 100 ? '✅ MAPA ODKRYTA!' :
+    `🌫️ ODKRYTO ${pct}%`;
+
+  // ── 6. Ogranicz panoramę mapy do odkrytego obszaru ──
+  restrictMapBounds(revPts);
+}
+
+function cutCircle(x, y, r) {
+  const g = fogCtx.createRadialGradient(x, y, r*0.3, x, y, r);
+  g.addColorStop(0,   'rgba(0,0,0,1)');
+  g.addColorStop(0.7, 'rgba(0,0,0,0.95)');
+  g.addColorStop(1,   'rgba(0,0,0,0)');
+  fogCtx.fillStyle = g;
+  fogCtx.beginPath(); fogCtx.arc(x, y, r, 0, Math.PI*2); fogCtx.fill();
+}
+
+function cutCircleOn(ctx, x, y, r, edgeSoftness) {
+  const inner = r * (1 - edgeSoftness);
+  const g = ctx.createRadialGradient(x, y, inner, x, y, r);
+  g.addColorStop(0,   'rgba(0,0,0,1)');
+  g.addColorStop(1,   'rgba(0,0,0,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+}
+
+function addFogTexture(ctx, W, H) {
+  // Kilka warstw półprzeźroczystych "chmur" dla efektu mgły
+  const clouds = [
+    { x: W*0.1, y: H*0.2, r: W*0.35, a: 0.18 },
+    { x: W*0.8, y: H*0.1, r: W*0.3,  a: 0.15 },
+    { x: W*0.5, y: H*0.5, r: W*0.4,  a: 0.12 },
+    { x: W*0.2, y: H*0.8, r: W*0.32, a: 0.16 },
+    { x: W*0.9, y: H*0.7, r: W*0.28, a: 0.14 },
+    { x: W*0.4, y: H*0.3, r: W*0.25, a: 0.10 },
+    { x: W*0.6, y: H*0.85,r: W*0.3,  a: 0.13 },
+  ];
+  clouds.forEach(c => {
+    const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, c.r);
+    g.addColorStop(0,   `rgba(30,30,60,${c.a})`);
+    g.addColorStop(0.5, `rgba(15,15,35,${c.a*0.6})`);
+    g.addColorStop(1,   'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI*2); ctx.fill();
+  });
+  // Subtelny niebieskawoszary gradient po całości
+  const grad = ctx.createLinearGradient(0, 0, W, H);
+  grad.addColorStop(0,   'rgba(10,15,30,0.08)');
+  grad.addColorStop(0.5, 'rgba(5,8,20,0.04)');
+  grad.addColorStop(1,   'rgba(15,10,35,0.09)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,W,H);
+}
+
+function restrictMapBounds(revPts) {
+  if (!map) return;
+  // Odkryty obszar = punkt startowy + odkryte punkty trasy
+  const visiblePts = ROUTE.slice(0, revPts + 1).map(p => [p.lat, p.lng]);
+  if (visiblePts.length < 1) return;
+  const bounds = L.latLngBounds(visiblePts).pad(0.15);
+  map.setMaxBounds(bounds);
+}
+
+function updateRouteOnMap(revealed) {
+  const revPts = Math.round((revealed / TOTAL) * (ROUTE.length - 1));
+
+  // Linia trasy
+  if (routeLine) map.removeLayer(routeLine);
+  const visible = ROUTE.slice(0, revPts + 1).map(p => [p.lat, p.lng]);
+  if (visible.length > 1) {
+    routeLine = L.polyline(visible, {
+      color:'#f5c842', weight:5, opacity:.95,
+      dashArray: revPts < ROUTE.length-1 ? '10,7' : null,
+    }).addTo(map);
+  }
+
+  // Markery
+  routeMarkers.forEach(m => map.removeLayer(m));
+  routeMarkers = [];
+  ROUTE.slice(0, revPts + 1).forEach((pt, i) => {
+    const isStart = i === 0, isFront = i === revPts;
+    const color = isStart ? '#39ff85' : isFront ? '#f5c842' : '#3b82f6';
+    const size  = isStart || isFront ? 16 : 10;
+    const icon = L.divIcon({
+      html:`<div style="background:${color};border:2px solid #0a0a0f;border-radius:50%;width:${size}px;height:${size}px;box-shadow:0 0 8px ${color};"></div>`,
+      className:'', iconSize:[size,size], iconAnchor:[size/2,size/2],
+    });
+    routeMarkers.push(L.marker([pt.lat,pt.lng],{icon}).addTo(map));
+  });
+}
+
+// ════════ GPS ════════
+function toggleGPS() {
+  gpsActive ? stopGPS() : startGPS();
+}
+function startGPS() {
+  if (!navigator.geolocation) { showToast('❌ GPS niedostępny w tej przeglądarce'); return; }
+  const btn = document.getElementById('gps-btn');
+  btn.classList.add('active'); btn.textContent = '🟢';
+  gpsActive = true;
+  gpsWatcher = navigator.geolocation.watchPosition(
+    pos => onGPS(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy),
+    ()  => { showToast('❌ Brak dostępu do GPS'); stopGPS(); },
+    { enableHighAccuracy:true, maximumAge:5000, timeout:12000 }
+  );
+}
+function stopGPS() {
+  if (gpsWatcher) navigator.geolocation.clearWatch(gpsWatcher);
+  gpsActive = false;
+  const btn = document.getElementById('gps-btn');
+  btn.classList.remove('active'); btn.textContent = '📍';
+  if (gpsMarker) { map.removeLayer(gpsMarker); gpsMarker = null; }
+  if (gpsCircle) { map.removeLayer(gpsCircle); gpsCircle = null; }
+}
+function onGPS(lat, lng, acc) {
+  if (gpsCircle) map.removeLayer(gpsCircle);
+  if (gpsMarker) map.removeLayer(gpsMarker);
+  gpsCircle = L.circle([lat,lng],{ radius:Math.min(acc,200), color:'#3b82f6', fillColor:'#3b82f6', fillOpacity:.12, weight:1 }).addTo(map);
+  const icon = L.divIcon({
+    html:`<div style="background:#3b82f6;border:3px solid #fff;border-radius:50%;width:16px;height:16px;box-shadow:0 0 10px #3b82f6;"></div>`,
+    className:'', iconSize:[16,16], iconAnchor:[8,8],
+  });
+  gpsMarker = L.marker([lat,lng],{icon,zIndexOffset:1000}).addTo(map);
+}
+
+// ════════ GRA ════════
+let state = {};
+
+function startGame() {
+  state = { currentQ:0, correct:0, lives:3 };
+  revealedCount = 0;
+  updateRouteOnMap(0);
+  drawFog(0);
+  showQuestion();
+}
+function restartGame() { startGame(); }
+
+function showQuestion() {
+  if (state.currentQ >= TOTAL) { showVictory(); return; }
+  showScreen('screen-question');
+
+  const q = QUESTIONS[state.currentQ];
+  const revPts = Math.round((state.correct / TOTAL) * (ROUTE.length - 1));
+  const hintIdx = Math.min(revPts, DRIVER_HINTS.length - 1);
+
+  document.getElementById('q-num').textContent = state.currentQ + 1;
+  document.getElementById('q-cat').textContent = q.category;
+  document.getElementById('q-text').textContent = q.question;
+  document.getElementById('driver-hint').textContent = DRIVER_HINTS[hintIdx];
+  document.getElementById('lives-disp').textContent = '❤️'.repeat(state.lives) + '🖤'.repeat(Math.max(0,3-state.lives));
+  const pct = Math.round((state.correct / TOTAL) * 100);
+  document.getElementById('prog-pct').textContent = pct + '%';
+  document.getElementById('prog-fill').style.width = pct + '%';
+
+  const cont = document.getElementById('answers');
+  cont.innerHTML = '';
+  q.answers.forEach((ans, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn fi';
+    btn.style.animationDelay = (i * 0.06) + 's';
+    btn.textContent = `${String.fromCharCode(65+i)}. ${ans}`;
+    btn.onclick = () => pick(i, btn);
+    cont.appendChild(btn);
+  });
+}
+
+function pick(idx, btn) {
+  const q = QUESTIONS[state.currentQ];
+  document.querySelectorAll('.answer-btn').forEach(b => b.disabled = true);
+
+  const wasCorrect = idx === q.correct;
+
+  if (wasCorrect) {
+    btn.classList.add('correct');
+    state.correct++;
+    revealedCount = state.correct;
+    updateRouteOnMap(state.correct);
+    drawFog(state.correct);
+    showToast('✅ POPRAWNIE! Mgła ustępuje...');
+  } else {
+    btn.classList.add('wrong');
+    document.querySelectorAll('.answer-btn')[q.correct].classList.add('correct');
+    state.lives = Math.max(0, state.lives - 1);
+    showToast('❌ BŁĄD! Czas na karę...');
+  }
+
+  state.currentQ++;
+
+  // Minigraka obowiązkowa co 5 pytań LUB przy błędzie
+  const isMandatoryMini = (state.currentQ % 5 === 0) && state.currentQ < TOTAL;
+  const isErrorMini = !wasCorrect;
+
+  if (isErrorMini) {
+    setTimeout(() => { state.miniReason = 'error'; showMinigame(); }, 900);
+  } else if (isMandatoryMini) {
+    setTimeout(() => { state.miniReason = 'checkpoint'; showMinigame(); }, 900);
+  } else {
+    setTimeout(showQuestion, 1000);
+  }
+}
+
+// ════════ MINIGRAKA ════════
+function showMinigame() {
+  showScreen('screen-minigame');
+  document.getElementById('mg-msg').textContent = '';
+  document.getElementById('mg-content').innerHTML = '';
+
+  const isCheckpoint = state.miniReason === 'checkpoint';
+  document.getElementById('mg-title').textContent = isCheckpoint ? '🚧 CHECKPOINT!' : '⚠️ KARA!';
+  document.getElementById('mg-sub').textContent = isCheckpoint
+    ? `// pytanie ${state.currentQ} z ${TOTAL} — obowiązkowe wyzwanie //`
+    : '// zła odpowiedź — przejdź wyzwanie //';
+
+  Math.random() < 0.5 ? buildMemory() : buildReaction();
+}
+
+function buildMemory() {
+  const grid = document.createElement('div');
+  grid.id = 'mg-memory';
+  document.getElementById('mg-content').appendChild(grid);
+  const emojis = ['🍕','🍻','💍','🎉','🚗','🗺️','💀','🔑'];
+  const cards = [...emojis,...emojis].sort(()=>Math.random()-.5);
+  let flipped=[], matched=0, locked=false;
+  cards.forEach(emoji => {
+    const c = document.createElement('div');
+    c.className='mem-card'; c.dataset.e=emoji; c.textContent='❓';
+    c.onclick = () => {
+      if (locked || c.classList.contains('matched') || c.classList.contains('flipped')) return;
+      c.classList.add('flipped'); c.textContent=emoji; flipped.push(c);
+      if (flipped.length===2) {
+        locked=true;
+        setTimeout(()=>{
+          if (flipped[0].dataset.e===flipped[1].dataset.e) {
+            flipped.forEach(x=>x.classList.add('matched')); matched++;
+            if (matched===emojis.length) { document.getElementById('mg-msg').textContent='✅ Wszystkie pary! Wracamy...'; setTimeout(showQuestion,1200); }
+          } else { flipped.forEach(x=>{x.classList.remove('flipped');x.textContent='❓';}); }
+          flipped=[]; locked=false;
+        }, 650);
+      }
+    };
+    grid.appendChild(c);
+  });
+}
+
+function buildReaction() {
+  const area = document.createElement('div');
+  area.id='mg-reaction-area'; area.textContent='🔴';
+  document.getElementById('mg-content').appendChild(area);
+  const msg = document.getElementById('mg-msg');
+  msg.textContent='Gdy zobaczysz 🟢 — kliknij jak najszybciej!';
+  let waiting=false, timer=null, start=null;
+  function go() {
+    waiting=false; area.style.background=''; area.textContent='🔴';
+    msg.textContent='Czekaj na zielony...';
+    timer=setTimeout(()=>{ waiting=true; start=Date.now(); area.style.background='rgba(57,255,133,0.15)'; area.textContent='🟢'; msg.textContent='TERAZ!'; }, 1500+Math.random()*2500);
+  }
+  area.onclick=()=>{
+    if (waiting) {
+      clearTimeout(timer);
+      const ms=Date.now()-start;
+      if (ms<650) { msg.textContent=`⚡ ${ms}ms — Zaliczone! Wracamy...`; setTimeout(showQuestion,1200); }
+      else { msg.textContent=`${ms}ms — Za wolno! Jeszcze raz...`; setTimeout(go,900); }
+    } else { clearTimeout(timer); msg.textContent='Za wcześnie! 😅'; setTimeout(go,900); }
+  };
+  go();
+}
+
+// ════════ WYGRANA ════════
+function showVictory() {
+  revealedCount = TOTAL;
+  updateRouteOnMap(TOTAL);
+  drawFog(TOTAL);
+  showScreen('screen-success');
+  confetti();
+  setTimeout(()=>{ map.flyTo([ROUTE[ROUTE.length-1].lat, ROUTE[ROUTE.length-1].lng], 13, {duration:2}); }, 600);
+}
+
+// ════════ HELPERS ════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  setTimeout(()=>{ if(map){map.invalidateSize();redrawFog();} },120);
+}
+
+let toastT;
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+function confetti() {
+  const colors=['#f5c842','#39ff85','#ff3b3b','#fff','#3b82f6'];
+  for(let i=0;i<50;i++) setTimeout(()=>{
+    const el=document.createElement('div'); el.className='cp';
+    el.style.cssText=`left:${Math.random()*100}vw;background:${colors[Math.floor(Math.random()*colors.length)]};animation-duration:${1.5+Math.random()*2}s;`;
+    document.body.appendChild(el); setTimeout(()=>el.remove(),4000);
+  }, i*40);
+}
+
+window.addEventListener('DOMContentLoaded', initMap);
+</script>
+</body>
+</html>
