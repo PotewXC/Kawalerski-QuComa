@@ -194,7 +194,7 @@ body {
       <div class="title-sub">// misja tajna — tylko dla odważnych //</div>
     </div>
     <div class="intro-desc">
-      Hej <span>Panie Młody</span> —  Myślałeś, że to będzie takie proste....Nic Ci się tutaj tak szybko nie rozjaśni<br><br>
+       Hej <span>Panie Młody</span> —  Myślałeś, że to będzie takie proste....Nic Ci się tutaj tak szybko nie rozjaśni<br><br>
 
       Kierowca właśnie zaczął jechać, ale to  <span> Ty </span> będziesz musiał go nawigować<br><br>
 
@@ -272,7 +272,21 @@ const ROUTE = [
   { lat: 50.8002, lng: 23.0442 },  // Jezioro Nielisz (CEL)
 ];
 
-const DRIVER_HINTS = [
+// Przy którym poprawnym pytaniu odkrywa się dany punkt trasy
+// ROUTE[0] = START (zawsze widoczny)
+// ROUTE[1] odkrywa się po 2 poprawnych, ROUTE[2] po 5, itd.
+const REVEAL_AT = [0, 2, 5, 10, 17, 24, 26, 27, 28];
+// REVEAL_AT[i] = ile poprawnych odpowiedzi potrzeba żeby odkryć ROUTE[i]
+// REVEAL_AT[0]=0 bo start zawsze widoczny
+
+function getRevealedRoutePoints(correct) {
+  // Zwraca ile punktów trasy jest już odkrytych (włącznie ze startem)
+  let count = 1; // start zawsze
+  for (let i = 1; i < REVEAL_AT.length; i++) {
+    if (correct >= REVEAL_AT[i]) count = i + 1;
+  }
+  return count; // liczba odkrytych punktów (1..9)
+}
   "\"Jedź na wschód, kierunek Świdnik!\"",
   "\"Przez Świdnik, dalej na południe!\"",
   "\"Jedź przez Piaski — droga 17!\"",
@@ -365,7 +379,7 @@ function drawFog(revealed) {
   const W = fogCanvas.width, H = fogCanvas.height;
   fogCtx.clearRect(0, 0, W, H);
 
-  const revPts = Math.round((revealed / TOTAL) * (ROUTE.length - 1));
+  const revPts = getRevealedRoutePoints(revealed) - 1; // indeks ostatniego odkrytego punktu
 
   // ── 1. Solidna czarna mgła (w pełni nieprzeźroczysta) ──
   fogCtx.fillStyle = 'rgb(8, 8, 16)';
@@ -497,7 +511,7 @@ function restrictMapBounds(revPts) {
 }
 
 function updateRouteOnMap(revealed) {
-  const revPts = Math.round((revealed / TOTAL) * (ROUTE.length - 1));
+  const revPts = getRevealedRoutePoints(revealed) - 1; // indeks ostatniego odkrytego punktu
 
   // Linia trasy
   if (routeLine) map.removeLayer(routeLine);
@@ -575,7 +589,7 @@ function showQuestion() {
   showScreen('screen-question');
 
   const q = QUESTIONS[state.currentQ];
-  const revPts = Math.round((state.correct / TOTAL) * (ROUTE.length - 1));
+  const revPts = getRevealedRoutePoints(state.correct) - 1;
   const hintIdx = Math.min(revPts, DRIVER_HINTS.length - 1);
 
   document.getElementById('q-num').textContent = state.currentQ + 1;
