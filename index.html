@@ -136,7 +136,28 @@ body {
 #mg-reaction-area:active { transform:scale(.93); }
 .mg-msg { font-size:12px; color:var(--muted); text-align:center; line-height:1.7; max-width:290px; }
 
-/* SUCCESS */
+/* SIMON SAYS */
+#simon-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 260px;
+  height: 260px;
+}
+.simon-btn {
+  border-radius: 12px;
+  border: 3px solid rgba(0,0,0,0.4);
+  cursor: pointer;
+  transition: filter .1s, transform .1s;
+  opacity: 0.35;
+}
+.simon-btn.lit { opacity: 1 !important; filter: brightness(1.8) saturate(1.4); transform: scale(0.96); }
+.simon-btn[data-s="0"] { background: #e74c3c; }
+.simon-btn[data-s="1"] { background: #2ecc71; }
+.simon-btn[data-s="2"] { background: #f1c40f; }
+.simon-btn[data-s="3"] { background: #3498db; }
+#simon-info { font-size: 11px; letter-spacing: 2px; color: var(--muted); text-align: center; min-height: 18px; }
+#simon-level { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--gold); letter-spacing: 3px; text-align: center; }
 #screen-success { justify-content:center; text-align:center; gap:16px; }
 .success-icon { font-size:60px; animation:bounce .7s ease infinite alternate; }
 @keyframes bounce { to { transform:translateY(-10px); } }
@@ -174,10 +195,15 @@ body {
     </div>
     <div class="intro-desc">
       Hej <span>Panie Młody</span> —  Myślałeś, że to będzie takie proste....Nic Ci się tutaj tak szybko nie rozjaśni<br><br>
+
       Kierowca właśnie zaczął jechać, ale to  <span> Ty </span> będziesz musiał go nawigować<br><br>
+
       Odpowiadaj poprawnie na pytania o <span>Wiktorii</span>, a mgła na mapie będzie się unosić odkrywając trasę.<br><br>
+
       Jeśli nie odpowiesz na pytania to chyba warto by się zastanowić czy aby napewno znasz swoją  <span>przyszłą żonę </span>.... <br><br>
+
       Co <span>5</span> pytań będziesz musiał przejść minigierke<br><br>
+
       Zła odpowiedź = <span>minigierkа</span>. Powodzenia 💀
     </div>
     <button class="btn btn-gold" onclick="startGame()">ZACZYNAM MISJĘ →</button>
@@ -620,7 +646,10 @@ function showMinigame() {
     ? `// pytanie ${state.currentQ} z ${TOTAL} — obowiązkowe wyzwanie //`
     : '// zła odpowiedź — przejdź wyzwanie //';
 
-  Math.random() < 0.5 ? buildMemory() : buildReaction();
+  const roll = Math.random();
+  if (roll < 0.33) buildMemory();
+  else if (roll < 0.66) buildReaction();
+  else buildSimon();
 }
 
 function buildMemory() {
@@ -672,6 +701,125 @@ function buildReaction() {
     } else { clearTimeout(timer); msg.textContent='Za wcześnie! 😅'; setTimeout(go,900); }
   };
   go();
+}
+
+function buildSimon() {
+  const content = document.getElementById('mg-content');
+  const msg = document.getElementById('mg-msg');
+
+  // Nadpisz tytuł żeby było wiadomo co to
+  document.getElementById('mg-title').textContent = '🧠 SIMON SAYS!';
+  document.getElementById('mg-sub').textContent = '// zapamiętaj sekwencję i powtórz //';
+
+  // Kontener
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;';
+
+  const levelEl = document.createElement('div');
+  levelEl.id = 'simon-level';
+  levelEl.textContent = 'POZIOM 1';
+
+  const infoEl = document.createElement('div');
+  infoEl.id = 'simon-info';
+  infoEl.textContent = 'Patrz uważnie...';
+
+  const grid = document.createElement('div');
+  grid.id = 'simon-grid';
+
+  const COLORS = ['#e74c3c','#2ecc71','#f1c40f','#3498db'];
+  const btns = COLORS.map((col, i) => {
+    const b = document.createElement('div');
+    b.className = 'simon-btn';
+    b.dataset.s = i;
+    b.style.background = col;
+    grid.appendChild(b);
+    return b;
+  });
+
+  wrap.appendChild(levelEl);
+  wrap.appendChild(infoEl);
+  wrap.appendChild(grid);
+  content.appendChild(wrap);
+
+  // Stan gry Simona
+  let sequence = [];
+  let playerIndex = 0;
+  let accepting = false;
+  const TARGET_ROUNDS = 6; // musi przejść 6 rund żeby wygrać
+  const BASE_SPEED = 600;  // ms na krok (będzie przyspieszać)
+
+  function lightUp(idx, duration) {
+    return new Promise(res => {
+      btns[idx].classList.add('lit');
+      setTimeout(() => { btns[idx].classList.remove('lit'); setTimeout(res, 80); }, duration);
+    });
+  }
+
+  async function playSequence() {
+    accepting = false;
+    btns.forEach(b => b.style.pointerEvents = 'none');
+    infoEl.textContent = 'Patrz uważnie...';
+    await new Promise(r => setTimeout(r, 600));
+
+    const speed = Math.max(250, BASE_SPEED - (sequence.length * 40)); // przyspiesza z każdą rundą
+    for (const idx of sequence) {
+      await lightUp(idx, speed);
+      await new Promise(r => setTimeout(r, 60));
+    }
+
+    infoEl.textContent = 'Twoja kolej! Powtórz sekwencję →';
+    playerIndex = 0;
+    accepting = true;
+    btns.forEach(b => b.style.pointerEvents = 'auto');
+  }
+
+  function nextRound() {
+    sequence.push(Math.floor(Math.random() * 4));
+    levelEl.textContent = `POZIOM ${sequence.length}`;
+    playSequence();
+  }
+
+  btns.forEach((b, i) => {
+    b.onclick = async () => {
+      if (!accepting) return;
+      await lightUp(i, 180);
+
+      if (i === sequence[playerIndex]) {
+        playerIndex++;
+        if (playerIndex === sequence.length) {
+          // Cała sekwencja poprawna
+          accepting = false;
+          if (sequence.length >= TARGET_ROUNDS) {
+            // WYGRANA
+            infoEl.textContent = '✅ MISTRZ! Wracamy do gry...';
+            levelEl.textContent = '🏆 WYGRANA!';
+            btns.forEach(b => b.style.opacity = '1');
+            msg.textContent = `Zapamiętałeś ${TARGET_ROUNDS} kroków — nieźle! 🎯`;
+            setTimeout(showQuestion, 1600);
+          } else {
+            infoEl.textContent = `✓ Dobra! Runda ${sequence.length} zaliczona`;
+            setTimeout(nextRound, 800);
+          }
+        }
+      } else {
+        // BŁĄD — resetuj sekwencję od nowa
+        accepting = false;
+        infoEl.textContent = '❌ Błąd! Sekwencja od nowa...';
+        levelEl.textContent = 'BŁĄD!';
+        btns.forEach(b => { b.style.opacity='0.35'; b.style.pointerEvents='none'; });
+
+        // Błysk błędu
+        await new Promise(r => setTimeout(r, 600));
+        sequence = [];
+        levelEl.textContent = 'POZIOM 1';
+        msg.textContent = 'Nie poddawaj się — zacznij od nowa!';
+        setTimeout(nextRound, 800);
+      }
+    };
+  });
+
+  // Start!
+  setTimeout(nextRound, 400);
 }
 
 // ════════ WYGRANA ════════
