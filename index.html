@@ -169,8 +169,8 @@ body {
 #toast.show { transform:translateX(-50%) translateY(0); }
 .cp { position:fixed; width:9px; height:9px; top:-10px; border-radius:2px; animation:fall linear forwards; z-index:9998; pointer-events:none; }
 @keyframes fall { to { transform:translateY(110dvh) rotate(720deg); opacity:0; } }
-.fi { animation:fadeIn .35s ease forwards; }
-@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+.btn-red { background:var(--red); color:#fff; }
+@keyframes shake { 0%,100%{transform:rotate(0)} 20%{transform:rotate(-15deg)} 40%{transform:rotate(15deg)} 60%{transform:rotate(-10deg)} 80%{transform:rotate(10deg)} }
 </style>
 </head>
 <body>
@@ -194,7 +194,7 @@ body {
       <div class="title-sub">// misja tajna — tylko dla odważnych //</div>
     </div>
     <div class="intro-desc">
-       Hej <span>Panie Młody</span> —  Myślałeś, że to będzie takie proste....Nic Ci się tutaj tak szybko nie rozjaśni<br><br>
+      Hej <span>Panie Młody</span> —  Myślałeś, że to będzie takie proste....Nic Ci się tutaj tak szybko nie rozjaśni<br><br>
 
       Kierowca właśnie zaczął jechać, ale to  <span> Ty </span> będziesz musiał go nawigować<br><br>
 
@@ -254,8 +254,20 @@ body {
     <button class="btn btn-outline" onclick="restartGame()">ZAGRAJ JESZCZE RAZ</button>
   </div>
 
-</div>
-<div id="toast"></div>
+  <div class="screen" id="screen-gameover">
+    <div style="font-size:64px;animation:shake .6s ease;">💀</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,10vw,56px);letter-spacing:5px;color:var(--red);text-shadow:0 0 30px rgba(255,59,59,0.5);text-align:center;">MISJA<br>NIEUDANA</div>
+    <div style="font-size:12px;line-height:1.8;color:#aaa;max-width:300px;text-align:center;">
+      Skończyły Ci się życia...<br>
+      Może jednak nie znasz swojej przyszłej żony tak dobrze? 😬
+    </div>
+    <div style="width:100%;max-width:380px;background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--red);border-radius:8px;padding:16px 18px;">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--red);margin-bottom:10px;">📊 WYNIK</div>
+      <div style="font-size:13px;color:var(--muted);">Poprawne odpowiedzi: <span id="go-correct" style="color:var(--gold);font-weight:700;">0</span> / 29</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:6px;">Odkryto trasy: <span id="go-pct" style="color:var(--gold);font-weight:700;">0%</span></div>
+    </div>
+    <button class="btn btn-red" onclick="startGame()">SPRÓBUJ JESZCZE RAZ →</button>
+  </div>
 
 <script>
 // ════════ TRASA ════════
@@ -631,6 +643,11 @@ function pick(idx, btn) {
     document.querySelectorAll('.answer-btn')[q.correct].classList.add('correct');
     state.lives = Math.max(0, state.lives - 1);
     showToast('❌ BŁĄD! Czas na karę...');
+
+    if (state.lives === 0) {
+      setTimeout(showGameOver, 900);
+      return;
+    }
   }
 
   state.currentQ++;
@@ -646,6 +663,12 @@ function pick(idx, btn) {
   } else {
     setTimeout(showQuestion, 1000);
   }
+}
+
+function showGameOver() {
+  document.getElementById('go-correct').textContent = state.correct;
+  document.getElementById('go-pct').textContent = Math.round((state.correct / TOTAL) * 100) + '%';
+  showScreen('screen-gameover');
 }
 
 // ════════ MINIGRAKA ════════
