@@ -35,7 +35,7 @@ body {
 #map-wrap {
   position: relative;
   width: 100%;
-  height: 30dvh;
+  height: 42dvh;
   flex-shrink: 0;
   border-bottom: 2px solid var(--gold);
 }
@@ -136,28 +136,7 @@ body {
 #mg-reaction-area:active { transform:scale(.93); }
 .mg-msg { font-size:12px; color:var(--muted); text-align:center; line-height:1.7; max-width:290px; }
 
-/* SIMON SAYS */
-#simon-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  width: 260px;
-  height: 260px;
-}
-.simon-btn {
-  border-radius: 12px;
-  border: 3px solid rgba(0,0,0,0.4);
-  cursor: pointer;
-  transition: filter .1s, transform .1s;
-  opacity: 0.35;
-}
-.simon-btn.lit { opacity: 1 !important; filter: brightness(1.8) saturate(1.4); transform: scale(0.96); }
-.simon-btn[data-s="0"] { background: #e74c3c; }
-.simon-btn[data-s="1"] { background: #2ecc71; }
-.simon-btn[data-s="2"] { background: #f1c40f; }
-.simon-btn[data-s="3"] { background: #3498db; }
-#simon-info { font-size: 11px; letter-spacing: 2px; color: var(--muted); text-align: center; min-height: 18px; }
-#simon-level { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--gold); letter-spacing: 3px; text-align: center; }
+/* SUCCESS */
 #screen-success { justify-content:center; text-align:center; gap:16px; }
 .success-icon { font-size:60px; animation:bounce .7s ease infinite alternate; }
 @keyframes bounce { to { transform:translateY(-10px); } }
@@ -169,8 +148,8 @@ body {
 #toast.show { transform:translateX(-50%) translateY(0); }
 .cp { position:fixed; width:9px; height:9px; top:-10px; border-radius:2px; animation:fall linear forwards; z-index:9998; pointer-events:none; }
 @keyframes fall { to { transform:translateY(110dvh) rotate(720deg); opacity:0; } }
-.btn-red { background:var(--red); color:#fff; }
-@keyframes shake { 0%,100%{transform:rotate(0)} 20%{transform:rotate(-15deg)} 40%{transform:rotate(15deg)} 60%{transform:rotate(-10deg)} 80%{transform:rotate(10deg)} }
+.fi { animation:fadeIn .35s ease forwards; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
 </style>
 </head>
 <body>
@@ -194,17 +173,9 @@ body {
       <div class="title-sub">// misja tajna — tylko dla odważnych //</div>
     </div>
     <div class="intro-desc">
-      Hej <span>Panie Młody</span> —  Myślałeś, że to będzie takie proste....Nic Ci się tutaj tak szybko nie rozjaśni<br><br>
-
-      Kierowca właśnie zaczął jechać, ale to  <span> Ty </span> będziesz musiał go nawigować<br><br>
-
-      Odpowiadaj poprawnie na pytania o <span>Wiktorii</span>, a mgła na mapie będzie się unosić odkrywając trasę.<br><br>
-
-      Jeśli nie odpowiesz na pytania to chyba warto by się zastanowić czy aby napewno znasz swoją  <span>przyszłą żonę </span>.... <br><br>
-
-      Co <span>5</span> pytań będziesz musiał przejść minigierke<br><br>
-
-      Zła odpowiedź = <span>minigierkа</span>. Powodzenia 💀
+      Hej <span>Panie Młody</span> — nie wiesz dokąd jedziesz.<br><br>
+      Odpowiadaj poprawnie na pytania o <span>Wiktorię</span>, a mgła na mapie będzie się unosić odkrywając trasę.<br><br>
+      Zła odpowiedź = <span>minigraka</span>. Powodzenia 💀
     </div>
     <button class="btn btn-gold" onclick="startGame()">ZACZYNAM MISJĘ →</button>
   </div>
@@ -229,8 +200,8 @@ body {
   </div>
 
   <div class="screen" id="screen-minigame">
-    <div class="mg-title" id="mg-title">⚠️ KARA!</div>
-    <div class="mg-sub" id="mg-sub">// zła odpowiedź — przejdź wyzwanie //</div>
+    <div class="mg-title">⚠️ KARA!</div>
+    <div class="mg-sub">// zła odpowiedź — przejdź wyzwanie //</div>
     <div id="mg-content"></div>
     <div class="mg-msg" id="mg-msg"></div>
   </div>
@@ -240,34 +211,13 @@ body {
     <div class="success-title">DOTARŁEŚ!</div>
     <div class="success-msg">
       Znasz Wiktorię jak nikt inny.<br>
-      <strong style="color:var(--green)">Czas świętować! 🍻</strong>
-    </div>
-    <div style="width:100%;max-width:380px;background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--green);border-radius:8px;padding:16px 18px;">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--green);margin-bottom:10px;">📍 CEL MISJI — ADRES</div>
-      <div style="font-size:20px;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;color:var(--text);margin-bottom:6px;">Nielisz 72</div>
-      <div style="font-size:14px;color:var(--muted);margin-bottom:14px;">22-413 Nielisz</div>
-      <a href="https://maps.google.com/?q=Nielisz+72,22-413+Nielisz" target="_blank"
-         style="display:block;background:var(--green);color:#0a0a0f;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:12px;border-radius:4px;text-decoration:none;text-align:center;">
-        OTWÓRZ W MAPACH →
-      </a>
+      <strong style="color:var(--green)">Jezioro Nielisz czeka — czas świętować! 🍻</strong>
     </div>
     <button class="btn btn-outline" onclick="restartGame()">ZAGRAJ JESZCZE RAZ</button>
   </div>
 
-  <div class="screen" id="screen-gameover">
-    <div style="font-size:64px;animation:shake .6s ease;">💀</div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,10vw,56px);letter-spacing:5px;color:var(--red);text-shadow:0 0 30px rgba(255,59,59,0.5);text-align:center;">MISJA<br>NIEUDANA</div>
-    <div style="font-size:12px;line-height:1.8;color:#aaa;max-width:300px;text-align:center;">
-      Skończyły Ci się życia...<br>
-      Może jednak nie znasz swojej przyszłej żony tak dobrze? 😬
-    </div>
-    <div style="width:100%;max-width:380px;background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--red);border-radius:8px;padding:16px 18px;">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--red);margin-bottom:10px;">📊 WYNIK</div>
-      <div style="font-size:13px;color:var(--muted);">Poprawne odpowiedzi: <span id="go-correct" style="color:var(--gold);font-weight:700;">0</span> / 29</div>
-      <div style="font-size:13px;color:var(--muted);margin-top:6px;">Odkryto trasy: <span id="go-pct" style="color:var(--gold);font-weight:700;">0%</span></div>
-    </div>
-    <button class="btn btn-red" onclick="startGame()">SPRÓBUJ JESZCZE RAZ →</button>
-  </div>
+</div>
+<div id="toast"></div>
 
 <script>
 // ════════ TRASA ════════
@@ -284,21 +234,7 @@ const ROUTE = [
   { lat: 50.8002, lng: 23.0442 },  // Jezioro Nielisz (CEL)
 ];
 
-// Przy którym poprawnym pytaniu odkrywa się dany punkt trasy
-// ROUTE[0] = START (zawsze widoczny)
-// ROUTE[1] odkrywa się po 2 poprawnych, ROUTE[2] po 5, itd.
-const REVEAL_AT = [0, 2, 5, 10, 17, 24, 26, 27, 28];
-// REVEAL_AT[i] = ile poprawnych odpowiedzi potrzeba żeby odkryć ROUTE[i]
-// REVEAL_AT[0]=0 bo start zawsze widoczny
-
-function getRevealedRoutePoints(correct) {
-  // Zwraca ile punktów trasy jest już odkrytych (włącznie ze startem)
-  let count = 1; // start zawsze
-  for (let i = 1; i < REVEAL_AT.length; i++) {
-    if (correct >= REVEAL_AT[i]) count = i + 1;
-  }
-  return count; // liczba odkrytych punktów (1..9)
-}
+const DRIVER_HINTS = [
   "\"Jedź na wschód, kierunek Świdnik!\"",
   "\"Przez Świdnik, dalej na południe!\"",
   "\"Jedź przez Piaski — droga 17!\"",
@@ -364,10 +300,6 @@ function initMap() {
   const bounds = L.latLngBounds(ROUTE.map(p => [p.lat, p.lng]));
   map.fitBounds(bounds, { padding:[24,24] });
 
-  // Ogranicz panoramę do punktu startowego na początku
-  const startBounds = L.latLngBounds([[ROUTE[0].lat-0.08, ROUTE[0].lng-0.12],[ROUTE[0].lat+0.08, ROUTE[0].lng+0.12]]);
-  map.setMaxBounds(startBounds);
-
   resizeFog();
   window.addEventListener('resize', resizeFog);
   map.on('moveend zoomend', redrawFog);
@@ -384,146 +316,70 @@ function resizeFog() {
 
 function redrawFog() { drawFog(revealedCount); }
 
-// Noise seed dla efektu mgły
-let noiseOff = 0;
 function drawFog(revealed) {
   if (!fogCtx || !map) return;
   const W = fogCanvas.width, H = fogCanvas.height;
   fogCtx.clearRect(0, 0, W, H);
 
-  const revPts = getRevealedRoutePoints(revealed) - 1; // indeks ostatniego odkrytego punktu
-
-  // ── 1. Solidna czarna mgła (w pełni nieprzeźroczysta) ──
-  fogCtx.fillStyle = 'rgb(8, 8, 16)';
+  // Pełna mgła
+  fogCtx.fillStyle = 'rgba(12,12,20,0.87)';
   fogCtx.fillRect(0, 0, W, H);
 
-  // ── 2. Wycięcie odkrytego obszaru (destination-out) ──
+  const revPts = Math.round((revealed / TOTAL) * (ROUTE.length - 1));
+
+  // Odkryj kręgi wokół odkrytych punktów + korytarze
   fogCtx.save();
   fogCtx.globalCompositeOperation = 'destination-out';
 
-  // Punkt startowy zawsze widoczny
-  const startCp = map.latLngToContainerPoint([ROUTE[0].lat, ROUTE[0].lng]);
-  cutCircle(startCp.x, startCp.y, 70);
-
-  for (let i = 1; i <= revPts; i++) {
+  for (let i = 0; i <= revPts; i++) {
     const cp = map.latLngToContainerPoint([ROUTE[i].lat, ROUTE[i].lng]);
-    cutCircle(cp.x, cp.y, 65);
+    const r = (i === 0 || i === revPts) ? 62 : 58;
+    const g = fogCtx.createRadialGradient(cp.x, cp.y, 0, cp.x, cp.y, r);
+    g.addColorStop(0,   'rgba(0,0,0,1)');
+    g.addColorStop(0.55,'rgba(0,0,0,0.85)');
+    g.addColorStop(1,   'rgba(0,0,0,0)');
+    fogCtx.fillStyle = g;
+    fogCtx.beginPath(); fogCtx.arc(cp.x, cp.y, r, 0, Math.PI*2); fogCtx.fill();
 
-    // Korytarz między punktami
-    const prev = map.latLngToContainerPoint([ROUTE[i-1].lat, ROUTE[i-1].lng]);
-    const steps = 18;
-    for (let s = 1; s < steps; s++) {
-      const t = s / steps;
-      cutCircle(prev.x+(cp.x-prev.x)*t, prev.y+(cp.y-prev.y)*t, 48);
+    // Korytarz do następnego
+    if (i < revPts) {
+      const np = map.latLngToContainerPoint([ROUTE[i+1].lat, ROUTE[i+1].lng]);
+      const steps = 14;
+      for (let s = 1; s < steps; s++) {
+        const t = s / steps;
+        const x = cp.x + (np.x - cp.x) * t;
+        const y = cp.y + (np.y - cp.y) * t;
+        const rr = 42;
+        const gg = fogCtx.createRadialGradient(x, y, 0, x, y, rr);
+        gg.addColorStop(0, 'rgba(0,0,0,0.9)');
+        gg.addColorStop(1, 'rgba(0,0,0,0)');
+        fogCtx.fillStyle = gg;
+        fogCtx.beginPath(); fogCtx.arc(x, y, rr, 0, Math.PI*2); fogCtx.fill();
+      }
     }
   }
   fogCtx.restore();
 
-  // ── 3. Nakładamy mgłę z powrotem na krawędziach odkrytego obszaru ──
-  // (miękkie przejście ale NIEPRZEŹROCZYSTY środek mgły)
-  fogCtx.save();
-  fogCtx.globalCompositeOperation = 'source-over';
-
-  // Budujemy odwróconą maskę: ciemność tam gdzie mgła
-  const offscreen = document.createElement('canvas');
-  offscreen.width = W; offscreen.height = H;
-  const oc = offscreen.getContext('2d');
-
-  // Wypełnij ciemnością
-  oc.fillStyle = 'rgba(8,8,16,1)';
-  oc.fillRect(0,0,W,H);
-
-  // Wytnij odkryty obszar (ostrzej)
-  oc.globalCompositeOperation = 'destination-out';
-  const startCp2 = map.latLngToContainerPoint([ROUTE[0].lat, ROUTE[0].lng]);
-  cutCircleOn(oc, startCp2.x, startCp2.y, 72, 0.3);
-
-  for (let i = 1; i <= revPts; i++) {
-    const cp = map.latLngToContainerPoint([ROUTE[i].lat, ROUTE[i].lng]);
-    cutCircleOn(oc, cp.x, cp.y, 66, 0.3);
-    const prev = map.latLngToContainerPoint([ROUTE[i-1].lat, ROUTE[i-1].lng]);
-    const steps = 18;
-    for (let s = 1; s < steps; s++) {
-      const t = s / steps;
-      cutCircleOn(oc, prev.x+(cp.x-prev.x)*t, prev.y+(cp.y-prev.y)*t, 50, 0.35);
-    }
+  // Znak ??? na celu jeśli nie odkryty
+  if (revPts < ROUTE.length - 1) {
+    const destCp = map.latLngToContainerPoint([ROUTE[ROUTE.length-1].lat, ROUTE[ROUTE.length-1].lng]);
+    fogCtx.font = 'bold 20px Space Mono, monospace';
+    fogCtx.fillStyle = 'rgba(245,200,66,0.55)';
+    fogCtx.textAlign = 'center';
+    fogCtx.textBaseline = 'middle';
+    fogCtx.fillText('???', destCp.x, destCp.y);
   }
 
-  // ── 4. Efekt mgły / chmur na surface offscreen ──
-  oc.globalCompositeOperation = 'source-over';
-  addFogTexture(oc, W, H);
-
-  fogCtx.drawImage(offscreen, 0, 0);
-  fogCtx.restore();
-
-  // ── 5. Label odkrycia ──
+  // Label
   const pct = Math.round((revealed / TOTAL) * 100);
   document.getElementById('fog-label').textContent =
     pct === 0   ? '🌫️ MAPA ZAKRYTA' :
     pct === 100 ? '✅ MAPA ODKRYTA!' :
     `🌫️ ODKRYTO ${pct}%`;
-
-  // ── 6. Ogranicz panoramę mapy do odkrytego obszaru ──
-  restrictMapBounds(revPts);
-}
-
-function cutCircle(x, y, r) {
-  const g = fogCtx.createRadialGradient(x, y, r*0.3, x, y, r);
-  g.addColorStop(0,   'rgba(0,0,0,1)');
-  g.addColorStop(0.7, 'rgba(0,0,0,0.95)');
-  g.addColorStop(1,   'rgba(0,0,0,0)');
-  fogCtx.fillStyle = g;
-  fogCtx.beginPath(); fogCtx.arc(x, y, r, 0, Math.PI*2); fogCtx.fill();
-}
-
-function cutCircleOn(ctx, x, y, r, edgeSoftness) {
-  const inner = r * (1 - edgeSoftness);
-  const g = ctx.createRadialGradient(x, y, inner, x, y, r);
-  g.addColorStop(0,   'rgba(0,0,0,1)');
-  g.addColorStop(1,   'rgba(0,0,0,0)');
-  ctx.fillStyle = g;
-  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
-}
-
-function addFogTexture(ctx, W, H) {
-  // Kilka warstw półprzeźroczystych "chmur" dla efektu mgły
-  const clouds = [
-    { x: W*0.1, y: H*0.2, r: W*0.35, a: 0.18 },
-    { x: W*0.8, y: H*0.1, r: W*0.3,  a: 0.15 },
-    { x: W*0.5, y: H*0.5, r: W*0.4,  a: 0.12 },
-    { x: W*0.2, y: H*0.8, r: W*0.32, a: 0.16 },
-    { x: W*0.9, y: H*0.7, r: W*0.28, a: 0.14 },
-    { x: W*0.4, y: H*0.3, r: W*0.25, a: 0.10 },
-    { x: W*0.6, y: H*0.85,r: W*0.3,  a: 0.13 },
-  ];
-  clouds.forEach(c => {
-    const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, c.r);
-    g.addColorStop(0,   `rgba(30,30,60,${c.a})`);
-    g.addColorStop(0.5, `rgba(15,15,35,${c.a*0.6})`);
-    g.addColorStop(1,   'rgba(0,0,0,0)');
-    ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI*2); ctx.fill();
-  });
-  // Subtelny niebieskawoszary gradient po całości
-  const grad = ctx.createLinearGradient(0, 0, W, H);
-  grad.addColorStop(0,   'rgba(10,15,30,0.08)');
-  grad.addColorStop(0.5, 'rgba(5,8,20,0.04)');
-  grad.addColorStop(1,   'rgba(15,10,35,0.09)');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0,0,W,H);
-}
-
-function restrictMapBounds(revPts) {
-  if (!map) return;
-  // Odkryty obszar = punkt startowy + odkryte punkty trasy
-  const visiblePts = ROUTE.slice(0, revPts + 1).map(p => [p.lat, p.lng]);
-  if (visiblePts.length < 1) return;
-  const bounds = L.latLngBounds(visiblePts).pad(0.15);
-  map.setMaxBounds(bounds);
 }
 
 function updateRouteOnMap(revealed) {
-  const revPts = getRevealedRoutePoints(revealed) - 1; // indeks ostatniego odkrytego punktu
+  const revPts = Math.round((revealed / TOTAL) * (ROUTE.length - 1));
 
   // Linia trasy
   if (routeLine) map.removeLayer(routeLine);
@@ -601,7 +457,7 @@ function showQuestion() {
   showScreen('screen-question');
 
   const q = QUESTIONS[state.currentQ];
-  const revPts = getRevealedRoutePoints(state.correct) - 1;
+  const revPts = Math.round((state.correct / TOTAL) * (ROUTE.length - 1));
   const hintIdx = Math.min(revPts, DRIVER_HINTS.length - 1);
 
   document.getElementById('q-num').textContent = state.currentQ + 1;
@@ -629,46 +485,23 @@ function pick(idx, btn) {
   const q = QUESTIONS[state.currentQ];
   document.querySelectorAll('.answer-btn').forEach(b => b.disabled = true);
 
-  const wasCorrect = idx === q.correct;
-
-  if (wasCorrect) {
+  if (idx === q.correct) {
     btn.classList.add('correct');
     state.correct++;
+    state.currentQ++;
     revealedCount = state.correct;
     updateRouteOnMap(state.correct);
     drawFog(state.correct);
     showToast('✅ POPRAWNIE! Mgła ustępuje...');
+    setTimeout(showQuestion, 1000);
   } else {
     btn.classList.add('wrong');
     document.querySelectorAll('.answer-btn')[q.correct].classList.add('correct');
     state.lives = Math.max(0, state.lives - 1);
+    state.currentQ++;
     showToast('❌ BŁĄD! Czas na karę...');
-
-    if (state.lives === 0) {
-      setTimeout(showGameOver, 900);
-      return;
-    }
+    setTimeout(showMinigame, 900);
   }
-
-  state.currentQ++;
-
-  // Minigraka obowiązkowa co 5 pytań LUB przy błędzie
-  const isMandatoryMini = (state.currentQ % 5 === 0) && state.currentQ < TOTAL;
-  const isErrorMini = !wasCorrect;
-
-  if (isErrorMini) {
-    setTimeout(() => { state.miniReason = 'error'; showMinigame(); }, 900);
-  } else if (isMandatoryMini) {
-    setTimeout(() => { state.miniReason = 'checkpoint'; showMinigame(); }, 900);
-  } else {
-    setTimeout(showQuestion, 1000);
-  }
-}
-
-function showGameOver() {
-  document.getElementById('go-correct').textContent = state.correct;
-  document.getElementById('go-pct').textContent = Math.round((state.correct / TOTAL) * 100) + '%';
-  showScreen('screen-gameover');
 }
 
 // ════════ MINIGRAKA ════════
@@ -676,17 +509,7 @@ function showMinigame() {
   showScreen('screen-minigame');
   document.getElementById('mg-msg').textContent = '';
   document.getElementById('mg-content').innerHTML = '';
-
-  const isCheckpoint = state.miniReason === 'checkpoint';
-  document.getElementById('mg-title').textContent = isCheckpoint ? '🚧 CHECKPOINT!' : '⚠️ KARA!';
-  document.getElementById('mg-sub').textContent = isCheckpoint
-    ? `// pytanie ${state.currentQ} z ${TOTAL} — obowiązkowe wyzwanie //`
-    : '// zła odpowiedź — przejdź wyzwanie //';
-
-  const roll = Math.random();
-  if (roll < 0.33) buildMemory();
-  else if (roll < 0.66) buildReaction();
-  else buildSimon();
+  Math.random() < 0.5 ? buildMemory() : buildReaction();
 }
 
 function buildMemory() {
@@ -738,125 +561,6 @@ function buildReaction() {
     } else { clearTimeout(timer); msg.textContent='Za wcześnie! 😅'; setTimeout(go,900); }
   };
   go();
-}
-
-function buildSimon() {
-  const content = document.getElementById('mg-content');
-  const msg = document.getElementById('mg-msg');
-
-  // Nadpisz tytuł żeby było wiadomo co to
-  document.getElementById('mg-title').textContent = '🧠 SIMON SAYS!';
-  document.getElementById('mg-sub').textContent = '// zapamiętaj sekwencję i powtórz //';
-
-  // Kontener
-  const wrap = document.createElement('div');
-  wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;';
-
-  const levelEl = document.createElement('div');
-  levelEl.id = 'simon-level';
-  levelEl.textContent = 'POZIOM 1';
-
-  const infoEl = document.createElement('div');
-  infoEl.id = 'simon-info';
-  infoEl.textContent = 'Patrz uważnie...';
-
-  const grid = document.createElement('div');
-  grid.id = 'simon-grid';
-
-  const COLORS = ['#e74c3c','#2ecc71','#f1c40f','#3498db'];
-  const btns = COLORS.map((col, i) => {
-    const b = document.createElement('div');
-    b.className = 'simon-btn';
-    b.dataset.s = i;
-    b.style.background = col;
-    grid.appendChild(b);
-    return b;
-  });
-
-  wrap.appendChild(levelEl);
-  wrap.appendChild(infoEl);
-  wrap.appendChild(grid);
-  content.appendChild(wrap);
-
-  // Stan gry Simona
-  let sequence = [];
-  let playerIndex = 0;
-  let accepting = false;
-  const TARGET_ROUNDS = 6; // musi przejść 6 rund żeby wygrać
-  const BASE_SPEED = 600;  // ms na krok (będzie przyspieszać)
-
-  function lightUp(idx, duration) {
-    return new Promise(res => {
-      btns[idx].classList.add('lit');
-      setTimeout(() => { btns[idx].classList.remove('lit'); setTimeout(res, 80); }, duration);
-    });
-  }
-
-  async function playSequence() {
-    accepting = false;
-    btns.forEach(b => b.style.pointerEvents = 'none');
-    infoEl.textContent = 'Patrz uważnie...';
-    await new Promise(r => setTimeout(r, 600));
-
-    const speed = Math.max(250, BASE_SPEED - (sequence.length * 40)); // przyspiesza z każdą rundą
-    for (const idx of sequence) {
-      await lightUp(idx, speed);
-      await new Promise(r => setTimeout(r, 60));
-    }
-
-    infoEl.textContent = 'Twoja kolej! Powtórz sekwencję →';
-    playerIndex = 0;
-    accepting = true;
-    btns.forEach(b => b.style.pointerEvents = 'auto');
-  }
-
-  function nextRound() {
-    sequence.push(Math.floor(Math.random() * 4));
-    levelEl.textContent = `POZIOM ${sequence.length}`;
-    playSequence();
-  }
-
-  btns.forEach((b, i) => {
-    b.onclick = async () => {
-      if (!accepting) return;
-      await lightUp(i, 180);
-
-      if (i === sequence[playerIndex]) {
-        playerIndex++;
-        if (playerIndex === sequence.length) {
-          // Cała sekwencja poprawna
-          accepting = false;
-          if (sequence.length >= TARGET_ROUNDS) {
-            // WYGRANA
-            infoEl.textContent = '✅ MISTRZ! Wracamy do gry...';
-            levelEl.textContent = '🏆 WYGRANA!';
-            btns.forEach(b => b.style.opacity = '1');
-            msg.textContent = `Zapamiętałeś ${TARGET_ROUNDS} kroków — nieźle! 🎯`;
-            setTimeout(showQuestion, 1600);
-          } else {
-            infoEl.textContent = `✓ Dobra! Runda ${sequence.length} zaliczona`;
-            setTimeout(nextRound, 800);
-          }
-        }
-      } else {
-        // BŁĄD — resetuj sekwencję od nowa
-        accepting = false;
-        infoEl.textContent = '❌ Błąd! Sekwencja od nowa...';
-        levelEl.textContent = 'BŁĄD!';
-        btns.forEach(b => { b.style.opacity='0.35'; b.style.pointerEvents='none'; });
-
-        // Błysk błędu
-        await new Promise(r => setTimeout(r, 600));
-        sequence = [];
-        levelEl.textContent = 'POZIOM 1';
-        msg.textContent = 'Nie poddawaj się — zacznij od nowa!';
-        setTimeout(nextRound, 800);
-      }
-    };
-  });
-
-  // Start!
-  setTimeout(nextRound, 400);
 }
 
 // ════════ WYGRANA ════════
